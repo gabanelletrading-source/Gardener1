@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Компаньон Растений</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7/babel.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body class="bg-green-100 min-h-screen flex flex-col items-center justify-center">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // JSON-база данных для компаньонских растений (на русском)
+    const plantData = {
+      "яблоня": {
+        companions: ["чеснок", "бархатцы", "настурция"],
+        avoid: ["картофель"],
+        benefits: ["Чеснок отпугивает тлю", "Бархатцы защищают от нематод", "Настурция привлекает полезных насекомых"],
+        seasonalTasks: ["Весна: Посадите бархатцы рядом", "Лето: Проверяйте на наличие тли", "Осень: Обрежьте ветви"]
+      },
+      "томат": {
+        companions: ["базилик", "бархатцы", "лук"],
+        avoid: ["картофель", "кукуруза"],
+        benefits: ["Базилик улучшает вкус и отпугивает мух", "Бархатцы защищают от вредителей", "Лук отпугивает паутинных клещей"],
+        seasonalTasks: ["Весна: Посадите базилик рядом", "Лето: Регулярно поливайте", "Осень: Соберите урожай томатов"]
+      },
+      "роза": {
+        companions: ["чеснок", "лаванда", "шнитт-лук"],
+        avoid: ["нет"],
+        benefits: ["Чеснок отпугивает тлю", "Лаванда привлекает опылителей", "Шнитт-лук защищает от вредителей"],
+        seasonalTasks: ["Весна: Посадите лаванду рядом", "Лето: Обрезайте отцветшие бутоны", "Осень: Замульчируйте корни"]
+      }
+    };
+
+    // Компонент приложения
+    function PlantCompanion() {
+      const [plants, setPlants] = React.useState([]);
+      const [newPlant, setNewPlant] = React.useState("");
+      const [region, setRegion] = React.useState("");
+      const [recommendations, setRecommendations] = React.useState([]);
+      const [gardenPlan, setGardenPlan] = React.useState([]);
+      const [season, setSeason] = React.useState("весна");
+
+      // Обработка добавления растения
+      const addPlant = () => {
+        if (newPlant && plantData[newPlant.toLowerCase()]) {
+          setPlants([...plants, newPlant.toLowerCase()]);
+          setNewPlant("");
+          generateRecommendations([...plants, newPlant.toLowerCase()]);
+        } else {
+          alert("Пожалуйста, выберите растение (яблоня, томат или роза).");
+        }
+      };
+
+      // Генерация рекомендаций
+      const generateRecommendations = (currentPlants) => {
+        const recs = currentPlants.map(plant => {
+          const data = plantData[plant];
+          return {
+            plant,
+            companions: data.companions.join(", "),
+            avoid: data.avoid.join(", "),
+            benefits: data.benefits.join("; "),
+            seasonal: data.seasonalTasks.find(task => task.toLowerCase().includes(season.toLowerCase())) || "Нет задач для этого сезона."
+          };
+        });
+        setRecommendations(recs);
+      };
+
+      // Добавление растения в план сада
+      const addToGardenPlan = (plant) => {
+        setGardenPlan([...gardenPlan, plant]);
+      };
+
+      return (
+        <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+          <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">Компаньон Растений</h1>
+
+          {/* Ввод данных */}
+          <div className="mb-6">
+            <label className="block text-lg font-medium text-gray-700 mb-2">Добавить растение</label>
+            <select
+              value={newPlant}
+              onChange={(e) => setNewPlant(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="">Выберите растение</option>
+              <option value="яблоня">Яблоня</option>
+              <option value="томат">Томат</option>
+              <option value="роза">Роза</option>
+            </select>
+            <button
+              onClick={addPlant}
+              className="mt-2 w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700"
+            >
+              Добавить растение
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-lg font-medium text-gray-700 mb-2">Выберите регион</label>
+            <input
+              type="text"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder="Введите ваш регион (например, Москва)"
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-lg font-medium text-gray-700 mb-2">Выберите сезон</label>
+            <select
+              value={season}
+              onChange={(e) => {
+                setSeason(e.target.value);
+                generateRecommendations(plants);
+              }}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="весна">Весна</option>
+              <option value="лето">Лето</option>
+              <option value="осень">Осень</option>
+              <option value="зима">Зима</option>
+            </select>
+          </div>
+
+          {/* Рекомендации */}
+          {recommendations.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-green-600 mb-4">Рекомендации</h2>
+              {recommendations.map((rec, index) => (
+                <div key={index} className="mb-4 p-4 bg-green-50 rounded-md">
+                  <h3 className="text-lg font-medium capitalize">{rec.plant}</h3>
+                  <p><strong>Компаньоны:</strong> {rec.companions}</p>
+                  <p><strong>Избегать:</strong> {rec.avoid}</p>
+                  <p><strong>Преимущества:</strong> {rec.benefits}</p>
+                  <p><strong>Сезонная задача ({season}):</strong> {rec.seasonal}</p>
+                  <button
+                    onClick={() => addToGardenPlan(rec.plant)}
+                    className="mt-2 bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600"
+                  >
+                    Добавить в план сада
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Планировщик сада */}
+          {gardenPlan.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-green-600 mb-4">Ваш план сада</h2>
+              <ul className="list-disc pl-6">
+                {gardenPlan.map((plant, index) => (
+                  <li key={index} className="capitalize">{plant}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Информация о регионе */}
+          {region && (
+            <div className="text-center">
+              <p className="text-gray-600">Регион: {region}</p>
+              <p className="text-gray-600">Рекомендации адаптированы для вашего климата.</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Рендеринг приложения
+    ReactDOM.render(<PlantCompanion />, document.getElementById("root"));
+  </script>
+</body>
+</html>
